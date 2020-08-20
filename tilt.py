@@ -34,23 +34,76 @@ def get_tilt():
         
 ######################################################################
 # move_pixel 
-#   simple iteration...no cool rollover.
+#   function based rollover to preserve the line the dots are traveling.
 #   returns a new x,y tuple.
 ######################################################################
-def move_pixel(x, y, roll, pitch):
-  x = x + roll
-  if (x > 4):
-      x = 0
-  if (x < 0):
-      x = 4
-        
-  y = y + pitch
-  if (y > 4):
-      y = 0
-  if (y < 0):
-      y = 4
-  
-  return(x,y)
+def move_pixel(curr_x, curr_y, roll, pitch):
+    # First, we need to calculate "slope" based on our pitch and roll.
+    # Since 0,0 is on the top-left corner, positive slope is a line down and right
+    #    (or up and left)
+    # Negative slope is a line up and right (or down and left)
+    # Zero slope means we're going straight left-right or up-down.  
+    #   (yes, one of those should really be infinity.  Deal with it.)
+    slope = roll * pitch
+    
+    # Move the x and y one dot.  We may go off the screen...we'll adjust that next.
+    new_x = curr_x + roll
+    new_y = curr_y + pitch
+
+    # first set of roll-over cases:  just up-down or left-right...no diagonals.
+    if (slope == 0):
+        if (new_x > 4):
+            new_x = 0
+        if (new_x < 0):
+            new_x = 4
+        if (new_y > 4):
+            new_y = 0
+        if (new_y < 0):
+            new_y = 4
+    
+    # The rest of these roll-over cases are a little tricker...if we're going 
+    # diagonally, our new spot is dependent on both slope and which "edge" we've
+    # moved off.  This means we have *8* special cases.  Bleah.  Extra credit if 
+    # you can condense these into a simpler, readable form.
+    
+    # postive slope conditions (up-and-left or down-and-right)
+    if (slope == 1):
+        # top edge:  new y is -1.  We'll roll-over to the right edge
+        if (new_y == -1):
+            new_x = 4
+            new_y = 4 - curr_x
+        # bottom edge:  new y is 5.  Roll over to the left edge
+        elif (new_y == 5):
+            new_x = 0
+            new_y = 4 - curr_x
+        # left edge:  new x is -1.  Roll over to the bottom edge
+        elif (new_x == -1):
+            new_y = 4
+            new_x = 4 - curr_y
+        # right dege:  new y is 5.  Roll over to the top edge
+        elif (new_x == 5):
+            new_y = 0
+            new_x = 4 - curr_y
+    # Negative slope conditons:  either up-and-right or down-and-left
+    elif (slope == -1):
+        # top edge:  new y is -1.  Roll over to the left edge
+        if (new_y == -1):
+            new_x = 0
+            new_y = curr_x
+        # bottom edge:  new y is 5.  Roll over to the right edge
+        elif (new_y == 5):
+            new_x = 4
+            new_y = curr_x
+        # left edge:  new x is -1.  Roll over to the top edge.
+        elif (new_x == -1):
+            new_y = 0
+            new_x = curr_y
+        # right edge:  new x is 5.  Roll over to the bottom edge
+        elif (new_x == 5):
+            new_y = 4
+            new_x = curr_y
+            
+    return(new_x,new_y)
 
 ######################################################################
 # main 
